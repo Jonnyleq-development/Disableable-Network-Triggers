@@ -1,6 +1,5 @@
 using GorillaNetworking;
 using HarmonyLib;
-using DisableNetworkTriggers;
 using UnityEngine;
 using UnityEngine.XR;
 using Valve.VR;
@@ -9,99 +8,84 @@ namespace DisableNetworkTriggers.Components
 {
     public static class ButtonManager
     {
-        private static bool _lastLeftStick;
-        private static bool _isSteamVR;
+        private static bool lastLeftStick;
+        private static bool steamVR;
+        private static bool initialized;
 
-        private static bool _initialized;
-
-        public static void TrySpawnButton()
+        public static void Update()
         {
-            InitializePlatform();
+            if (!initialized)
+                DetectPlatform();
 
-            bool leftStick = IsLeftStickPressed();
+            bool pressed = IsLeftStickPressed();
 
-            if (leftStick && !_lastLeftStick)
-            {
-                ToggleNetworkTriggers();
-            }
+            if (pressed && !lastLeftStick)
+                Toggle();
 
-            _lastLeftStick = leftStick;
+            lastLeftStick = pressed;
         }
 
-        private static void InitializePlatform()
+        private static void DetectPlatform()
         {
-            if (_initialized)
-                return;
-
             try
             {
-                string? platform = Traverse
+                string platform = Traverse
                     .Create(PlayFabAuthenticator.instance)
                     .Field("platform")
                     .GetValue()
                     ?.ToString();
 
-                if (!string.IsNullOrEmpty(platform))
-                {
-                    _isSteamVR =
-                        platform.ToLower().Contains("steam");
+                if (string.IsNullOrEmpty(platform))
+                    return;
 
-                    Debug.Log(
-                        $"[DisableableNetworkTriggers] " +
-                        $"Detected platform: {platform} " +
-                        $"(SteamVR: {_isSteamVR})"
-                    );
+                steamVR = platform.ToLowerInvariant().Contains("steam");
+                initialized = true;
 
-                    _initialized = true;
-                }
+                Debug.Log(
+                    $"[DisableableNetworkTriggers] Platform: {platform}"
+                );
             }
             catch (System.Exception e)
             {
                 Debug.LogError(
-                    $"[DisableableNetworkTriggers] " +
-                    $"Failed to detect platform: {e}"
+                    $"[DisableableNetworkTriggers] Platform detection failed: {e}"
                 );
             }
         }
 
         private static bool IsLeftStickPressed()
         {
-            if (_isSteamVR)
+            if (steamVR)
             {
-                return SteamVR_Actions
-                    .gorillaTag_LeftJoystickClick
+                return SteamVR_Actions.gorillaTag_LeftJoystickClick
                     .GetState(SteamVR_Input_Sources.LeftHand);
             }
 
-            InputDevice device =
+            InputDevice leftHand =
                 InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
 
-            if (device.isValid &&
-                device.TryGetFeatureValue(
-                    CommonUsages.primary2DAxisClick,
-                    out bool pressed))
-            {
-                return pressed;
-            }
-
-            return false;
+            return leftHand.isValid &&
+                   leftHand.TryGetFeatureValue(
+                       CommonUsages.primary2DAxisClick,
+                       out bool pressed) &&
+                   pressed;
         }
 
-        private static void ToggleNetworkTriggers()
+        private static void Toggle()
         {
-            NetworkTriggerPatch.enabled = !NetworkTriggerPatch.enabled;
+            NetworkTriggerPatch.enabled =
+                !NetworkTriggerPatch.enabled;
 
             Debug.Log(
-                $"[DisableableNetworkTriggers] " +
-                $"Network Triggers Disabled: " +
-                $"{NetworkTriggerPatch.enabled}"
+                $"[DisableableNetworkTriggers] Network triggers " +
+                $"{(NetworkTriggerPatch.enabled ? "disabled" : "enabled")}"
             );
         }
 
-        public static void DestroyButton()
+        public static void Reset()
         {
-            _lastLeftStick = false;
-            _initialized = false;
+            lastLeftStick = false;
+            initialized = false;
         }
     }
 }
