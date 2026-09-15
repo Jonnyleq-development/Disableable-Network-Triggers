@@ -8,12 +8,12 @@ namespace DisableNetworkTriggers.Components
     {
         private static bool lastLeftStick;
 
-        public static void TrySpawnButton()
+        public static void Update()
         {
             bool pressed = IsLeftStickPressed();
 
             if (pressed && !lastLeftStick)
-                ToggleNetworkTriggers();
+                Toggle();
 
             lastLeftStick = pressed;
         }
@@ -30,18 +30,17 @@ namespace DisableNetworkTriggers.Components
                    pressed;
         }
 
-        private static void ToggleNetworkTriggers()
+        private static void Toggle()
         {
-            NetworkTriggerPatch.enabled =
-                !NetworkTriggerPatch.enabled;
+            NetworkTriggerPatch.disabled = !NetworkTriggerPatch.disabled;
 
             Debug.Log(
                 $"[DisableableNetworkTriggers] Network triggers " +
-                $"{(NetworkTriggerPatch.enabled ? "disabled" : "enabled")}"
+                $"{(NetworkTriggerPatch.disabled ? "disabled" : "enabled")}"
             );
         }
 
-        public static void DestroyButton()
+        public static void Reset()
         {
             lastLeftStick = false;
         }
