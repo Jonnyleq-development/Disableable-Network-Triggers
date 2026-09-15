@@ -1,0 +1,116 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>DisableableNetworkTriggers</AssemblyName>
+    <Description>A Gorilla Tag mod that disables network triggers</Description>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- Auto-detect Gorilla Tag installation on Linux / Windows -->
+    <GorillaTagPath Condition="'$(GorillaTagPath)' == '' and Exists('$(HOME)/.local/share/Steam/steamapps/common/Gorilla Tag')">$(HOME)/.local/share/Steam/steamapps/common/Gorilla Tag</GorillaTagPath>
+    <GorillaTagPath Condition="'$(GorillaTagPath)' == '' and Exists('C:\Program Files (x86)\Steam\steamapps\common\Gorilla Tag')">C:\Program Files (x86)\Steam\steamapps\common\Gorilla Tag</GorillaTagPath>
+    <GorillaTagPath Condition="'$(GorillaTagPath)' == '' and Exists('C:\Program Files\Steam\steamapps\common\Gorilla Tag')">C:\Program Files\Steam\steamapps\common\Gorilla Tag</GorillaTagPath>
+    <GorillaTagPath Condition="'$(GorillaTagPath)' == ''">$(HOME)/.local/share/Steam/steamapps/common/Gorilla Tag</GorillaTagPath>
+
+    <GameDataPath>$(GorillaTagPath)/Gorilla Tag_Data/Managed</GameDataPath>
+    <GameDataPath Condition="!Exists('$(GameDataPath)')">$(GorillaTagPath)\Gorilla Tag_Data\Managed</GameDataPath>
+
+    <BepInExCorePath>$(GorillaTagPath)/BepInEx/core</BepInExCorePath>
+    <BepInExCorePath Condition="!Exists('$(BepInExCorePath)')">$(GorillaTagPath)\BepInEx\core</BepInExCorePath>
+
+    <BepInExPluginsPath>$(GorillaTagPath)/BepInEx/plugins</BepInExPluginsPath>
+    <BepInExPluginsPath Condition="!Exists('$(BepInExPluginsPath)')">$(GorillaTagPath)\BepInEx\plugins</BepInExPluginsPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+  </ItemGroup>
+
+  <!-- Game and Unity assembly references from local installation -->
+  <ItemGroup Condition="Exists('$(GameDataPath)')">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameDataPath)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PhotonRealtime">
+      <HintPath>$(GameDataPath)/PhotonRealtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PhotonUnityNetworking">
+      <HintPath>$(GameDataPath)/PhotonUnityNetworking.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Photon3Unity3D">
+      <HintPath>$(GameDataPath)/Photon3Unity3D.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameDataPath)/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDataPath)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(GameDataPath)/UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameDataPath)/UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(GameDataPath)/UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VRModule">
+      <HintPath>$(GameDataPath)/UnityEngine.VRModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.XRModule">
+      <HintPath>$(GameDataPath)/UnityEngine.XRModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(GameDataPath)/UnityEngine.AudioModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameDataPath)/UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputModule">
+      <HintPath>$(GameDataPath)/UnityEngine.InputModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SteamVR">
+      <HintPath>$(GameDataPath)/SteamVR.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SteamVR_Actions">
+      <HintPath>$(GameDataPath)/SteamVR_Actions.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(BepInExCorePath)')">
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExCorePath)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExCorePath)/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Target to automatically copy build output to BepInEx plugins folder -->
+  <Target Name="CopyToPlugins" AfterTargets="Build" Condition="Exists('$(BepInExPluginsPath)')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExPluginsPath)\$(AssemblyName)" />
+  </Target>
+
+</Project>
